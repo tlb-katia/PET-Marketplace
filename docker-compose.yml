@@ -1,0 +1,36 @@
+version: "3.9"
+services:
+  postgres:
+    container_name: psql_db
+    image: postgres:14.3-alpine
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=server
+      - POSTGRES_PASSWORD=server
+      - POSTGRES_DB=marketplace_db
+    restart: always
+    volumes:
+      - ./internal/storage/postgres/pgdata:/var/lib/postgresql/data
+      - ./internal/storage/postgres/database.sql://docker-entrypoint-initdb.d/database.sql
+
+  redis_db:
+    image: redis:7
+    container_name: redis_db
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./internal/storage/redis_db/data:/data
+
+  server:
+    container_name: server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis_db
+    env_file: .env
