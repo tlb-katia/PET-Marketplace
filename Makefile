@@ -2,17 +2,15 @@ serv = server
 db = psql_db
 cache = redis_db
 
-all: ##@APP application in docker container
-	docker-compose-api
+all: docker-compose-api ##@APP application in docker container
 
-docker-compose-api: ##@APP runs application in docker container
-	docker build --no-cache -t $(serv) .
-	docker-compose up
 
-clean-data: ##@DB clean a database saved data
-	rm -rf pkg/repository/db/pgdata
-	rm -rf pkg/repository/redis/data
-	rm -rf pkg/repository/redis/redis.conf
+docker-compose-api: permission ##@APP runs application in docker container
+	docker-compose up --build $(serv)
+
+clean-data: permission ##@DB clean a database saved data
+	rm -rf internal/storage/postgres/pgdata
+	rm -rf internal/storage/redis/data
 
 docker-stop-api: ##@SERVER stops containers
 	docker stop $(db)
@@ -32,5 +30,8 @@ database-logs:  ##@DB show logs from database container
 
 cache-logs: ##@CACHE show logs from cache container
 	docker logs $(cache)
+
+permission:
+	sudo chmod -R 777 /home/katia/GolandProjects/Marketplace/internal/storage/postgres/pgdata
 
 all-logs: database-logs server-logs cache-logs ##@APP show logs from server and db containers together
